@@ -47,7 +47,6 @@
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-junit4</artifactId>
             <version>${allure.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -64,7 +63,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Перекрываем уязвимую транзитивную версию commons-codec -->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>

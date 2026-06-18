@@ -2,11 +2,12 @@ package order;
 
 import client.OrderClient;
 import client.UserClient;
-import model.Order;
-import model.User;
 import io.qameta.allure.Description;
+import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
+import model.Order;
+import model.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.*;
 
 public class CreateOrderTest {
@@ -35,7 +37,15 @@ public class CreateOrderTest {
 
     @After
     public void tearDown() {
+        if (accessToken != null) {
+            userClient.deleteUser(accessToken);
+        }
+    }
 
+    @Step("Создание заказа с ингредиентами: {ingredients}")
+    private Response createOrderWithIngredients(List<String> ingredients, String token) {
+        Order order = new Order(ingredients);
+        return orderClient.createOrder(order, token);
     }
 
     @Test
@@ -51,7 +61,7 @@ public class CreateOrderTest {
         Response response = orderClient.createOrder(order, accessToken);
 
         response.then()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", equalTo(true))
                 .body("order.number", notNullValue());
     }
@@ -69,7 +79,7 @@ public class CreateOrderTest {
         Response response = orderClient.createOrderWithoutAuth(order);
 
         response.then()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", equalTo(true))
                 .body("order.number", notNullValue());
     }
@@ -88,7 +98,7 @@ public class CreateOrderTest {
         Response response = orderClient.createOrder(order, accessToken);
 
         response.then()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("success", equalTo(true))
                 .body("order.ingredients", hasSize(3));
     }
@@ -102,7 +112,7 @@ public class CreateOrderTest {
         Response response = orderClient.createOrder(order, accessToken);
 
         response.then()
-                .statusCode(400)
+                .statusCode(SC_BAD_REQUEST)
                 .body("success", equalTo(false))
                 .body("message", equalTo("Ingredient ids must be provided"));
     }
@@ -115,6 +125,8 @@ public class CreateOrderTest {
         Order order = new Order(invalid);
 
         Response response = orderClient.createOrder(order, accessToken);
-        response.then().statusCode(anyOf(is(500), is(400)));
+
+        // Ожидаем код 500 (внутренняя ошибка сервера)
+        response.then().statusCode(SC_INTERNAL_SERVER_ERROR);
     }
 }
